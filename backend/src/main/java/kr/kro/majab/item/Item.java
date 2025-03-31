@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import kr.kro.majab.order_item.OrderItem;
 import kr.kro.majab.store.Store;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -20,15 +21,11 @@ public class Item {
     @Column(name = "items_id")
     private Long id;
 
-    private String name;
-
-    private int quantity;
+    private int stock;
 
     private int originalPrice;
 
     private int discountedPrice;
-
-    private String pictureUrl;
 
     private String description;
 
@@ -38,4 +35,24 @@ public class Item {
 
     @OneToMany(mappedBy = "item")
     private List<OrderItem> orderItems = new ArrayList<>();
+
+    @Builder
+    public Item(int stock, int originalPrice, int discountedPrice, String description) {
+        this.stock = stock;
+        this.originalPrice = originalPrice;
+        this.discountedPrice = discountedPrice;
+        this.description = description;
+    }
+
+    public void updateInfo(int originalPrice, int discountedPrice, String description) {
+        this.originalPrice = originalPrice;
+        this.discountedPrice = discountedPrice;
+        this.description = description;
+    }
+
+    public void updateStock(int stock) {
+        this.stock = stock;
+    }
+
+
 }
