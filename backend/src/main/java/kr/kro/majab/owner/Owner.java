@@ -5,6 +5,7 @@ import kr.kro.majab.notice.Notice;
 import kr.kro.majab.owner_review.OwnerReview;
 import kr.kro.majab.store.Store;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -36,4 +37,18 @@ public class Owner {
 
     @OneToMany(mappedBy = "owner")
     private List<Store> stores = new ArrayList<>();
+
+    @Builder
+    public Owner(String email, String password, String phoneNumber) {
+        this.email = email;
+        this.password = password;
+        this.phoneNumber = phoneNumber;
+        this.stores.add(new Store(this));
+    }
+
+    public static Owner create() {
+        return Owner.builder()
+                .email("email")
+                .build();
+    }
 }

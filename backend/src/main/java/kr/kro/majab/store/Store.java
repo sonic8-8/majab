@@ -8,6 +8,7 @@ import kr.kro.majab.notice.Notice;
 import kr.kro.majab.order.Order;
 import kr.kro.majab.owner.Owner;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -25,24 +26,24 @@ public class Store {
     @Column(name = "stores_id")
     private Long id;
 
-    private String name;
+    private String name = "가게명을 입력하세요";
 
-    private String ownerName;
-    private String businessName;
-    private String businessAddress;
-    private String businessNumber;
-    private String phoneNumber;
+    private String ownerName = "대표자명";
+    private String businessName = "상호명";
+    private String businessAddress = "사업자 주소";
+    private String businessNumber = "사업자등록번호";
+    private String phoneNumber = "전화번호";
 
-    private StoreStatus storeStatus;
+    private StoreStatus storeStatus = StoreStatus.CLOSE;
 
-    private LocalDateTime pickupStartTime;
-    private LocalDateTime pickupEndTime;
+    private LocalDateTime pickupStartTime = LocalDateTime.now();
+    private LocalDateTime pickupEndTime = LocalDateTime.now();
 
-    private LocalDateTime suspendedStartTime;
-    private LocalDateTime suspendedEndTime;
+    private LocalDateTime suspendedStartTime = LocalDateTime.now();
+    private LocalDateTime suspendedEndTime = LocalDateTime.now();
 
-    private LocalDateTime openTime;
-    private LocalDateTime closeTime;
+    private LocalDateTime openTime = LocalDateTime.now();
+    private LocalDateTime closeTime = LocalDateTime.now();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owners_id")
@@ -63,4 +64,10 @@ public class Store {
 
     @OneToMany(mappedBy = "store")
     private List<Item> items = new ArrayList<>();
+
+    @Builder
+    public Store(Owner owner) {
+        this.owner = owner;
+        this.items.add(new Item(this));
+    }
 }
