@@ -1,6 +1,7 @@
 package kr.kro.majab.follow;
 
 import jakarta.persistence.*;
+import kr.kro.majab.BaseEntity;
 import kr.kro.majab.store.Store;
 import kr.kro.majab.user.User;
 import lombok.AccessLevel;
@@ -11,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "follows")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Follow {
+public class Follow extends BaseEntity {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "follows_id")

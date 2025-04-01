@@ -1,6 +1,7 @@
 package kr.kro.majab.category;
 
 import jakarta.persistence.*;
+import kr.kro.majab.BaseEntity;
 import kr.kro.majab.store.Store;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -13,7 +14,7 @@ import java.util.List;
 @Entity
 @Table(name = "categories")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Category {
+public class Category extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

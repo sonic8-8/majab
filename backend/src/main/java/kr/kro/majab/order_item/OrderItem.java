@@ -1,6 +1,7 @@
 package kr.kro.majab.order_item;
 
 import jakarta.persistence.*;
+import kr.kro.majab.BaseEntity;
 import kr.kro.majab.item.Item;
 import kr.kro.majab.order.Order;
 import lombok.AccessLevel;
@@ -11,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "orders_items")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class OrderItem {
+public class OrderItem extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

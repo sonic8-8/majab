@@ -1,6 +1,7 @@
 package kr.kro.majab.notice;
 
 import jakarta.persistence.*;
+import kr.kro.majab.BaseEntity;
 import kr.kro.majab.owner.Owner;
 import kr.kro.majab.store.Store;
 import lombok.AccessLevel;
@@ -12,7 +13,7 @@ import org.apache.logging.log4j.util.Lazy;
 @Entity
 @Table(name = "notices")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Notice {
+public class Notice extends BaseEntity {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "notices_id")

@@ -1,6 +1,7 @@
 package kr.kro.majab.order;
 
 import jakarta.persistence.*;
+import kr.kro.majab.BaseEntity;
 import kr.kro.majab.order_item.OrderItem;
 import kr.kro.majab.review.Review;
 import kr.kro.majab.store.Store;
@@ -16,7 +17,7 @@ import java.util.List;
 @Entity
 @Table(name = "orders")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Order {
+public class Order extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,8 +33,6 @@ public class Order {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "stores_id")
     private Store store;
-
-    //주문 날짜
 
     @OneToMany(mappedBy = "order")
     private List<Review> reviews = new ArrayList<>();

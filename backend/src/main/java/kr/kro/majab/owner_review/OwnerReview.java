@@ -1,6 +1,7 @@
 package kr.kro.majab.owner_review;
 
 import jakarta.persistence.*;
+import kr.kro.majab.BaseEntity;
 import kr.kro.majab.owner.Owner;
 import kr.kro.majab.review.Review;
 import lombok.AccessLevel;
@@ -14,7 +15,7 @@ import java.util.List;
 @Entity
 @Table(name = "owner_reviews")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class OwnerReview {
+public class OwnerReview extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

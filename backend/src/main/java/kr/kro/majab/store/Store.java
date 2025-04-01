@@ -1,6 +1,7 @@
 package kr.kro.majab.store;
 
 import jakarta.persistence.*;
+import kr.kro.majab.BaseEntity;
 import kr.kro.majab.category.Category;
 import kr.kro.majab.follow.Follow;
 import kr.kro.majab.item.Item;
@@ -20,7 +21,7 @@ import java.util.List;
 @Getter
 @Table(name = "stores")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Store {
+public class Store extends BaseEntity {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "stores_id")

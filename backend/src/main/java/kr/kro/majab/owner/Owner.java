@@ -1,6 +1,7 @@
 package kr.kro.majab.owner;
 
 import jakarta.persistence.*;
+import kr.kro.majab.BaseEntity;
 import kr.kro.majab.notice.Notice;
 import kr.kro.majab.owner_review.OwnerReview;
 import kr.kro.majab.store.Store;
@@ -16,7 +17,7 @@ import java.util.List;
 @Entity
 @Table(name = "owners")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Owner {
+public class Owner extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
