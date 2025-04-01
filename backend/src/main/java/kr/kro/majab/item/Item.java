@@ -44,6 +44,10 @@ public class Item {
         this.description = description;
     }
 
+    public Item(Store store) {
+        this.store = store;
+    }
+
     public void updateInfo(int originalPrice, int discountedPrice, String description) {
         this.originalPrice = originalPrice;
         this.discountedPrice = discountedPrice;
