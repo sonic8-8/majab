@@ -58,5 +58,19 @@ public class Item {
         this.stock = stock;
     }
 
+    public void deductStock(int quantity) { // 주문할때 사용
+        if (isStockLessThan(quantity)) {
+            throw new IllegalArgumentException("차감할 재고 수가 부족합니다");
+        }
+
+        this.stock -= quantity;
+    }
+
+    public boolean isStockLessThan(int quantity) {
+        return this.stock < quantity;
+    }
+
+
+
 
 }
