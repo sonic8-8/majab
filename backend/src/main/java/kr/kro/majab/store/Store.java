@@ -35,6 +35,7 @@ public class Store extends BaseEntity {
     private String businessNumber = "사업자등록번호";
     private String phoneNumber = "전화번호";
 
+    @Enumerated(EnumType.STRING)
     private StoreStatus storeStatus = StoreStatus.CLOSE;
 
     private LocalDateTime pickupStartTime = LocalDateTime.now();
