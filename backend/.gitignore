@@ -36,5 +36,5 @@ out/
 ### VS Code ###
 .vscode/
 
-#환경 변수 설정 편하게 하기 위해 추가함
+#환경 변수 설정 편하게 하기 위해 추가
 src/main/resources/application.yml
