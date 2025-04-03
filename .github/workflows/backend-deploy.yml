@@ -48,6 +48,7 @@ jobs:
 
       - name: Docker 이미지 생성
         run: docker build -t majab-server .
+        working-directory: ./backend
 
       - name: Docker 이미지에 Tag 붙이기
         run: docker tag majab-server ${{ steps.login-ecr.outputs.registry }}/majab-server:latest
