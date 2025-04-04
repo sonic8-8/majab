@@ -2,7 +2,6 @@ package kr.kro.majab.order;
 
 import jakarta.persistence.*;
 import kr.kro.majab.BaseEntity;
-import kr.kro.majab.item.Item;
 import kr.kro.majab.order_item.OrderItem;
 import kr.kro.majab.review.Review;
 import kr.kro.majab.store.Store;
@@ -15,7 +14,6 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Getter
 @Entity
@@ -31,7 +29,7 @@ public class Order extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private OrderStatus orderStatus;
 
-    public LocalDateTime orderDate;
+    public LocalDateTime registeredDateTime;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "users_id")
@@ -48,12 +46,11 @@ public class Order extends BaseEntity {
     private List<OrderItem> orderItems = new ArrayList<>();
 
     @Builder
-    public Order(OrderStatus orderStatus, LocalDateTime orderDate) {
+    public Order(OrderStatus orderStatus, LocalDateTime registeredDateTime) {
         this.orderStatus = orderStatus;
-        this.orderDate = orderDate;
+        this.registeredDateTime = registeredDateTime;
     }
 
-    //연관 관계 편의 메서드
     public void changeUser(User user) {
         this.user = user;
         user.getOrders().add(this);
