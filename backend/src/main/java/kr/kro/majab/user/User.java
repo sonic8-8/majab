@@ -37,9 +37,6 @@ public class User extends BaseEntity {
     private List<Review> reviews = new ArrayList<>();
 
     @OneToMany(mappedBy = "user")
-    private List<Order> orders = new ArrayList<>();
-
-    @OneToMany(mappedBy = "user")
     private List<Follow> follows = new ArrayList<>();
 
     @OneToMany(mappedBy = "user")
@@ -56,11 +53,6 @@ public class User extends BaseEntity {
     public void addReview(Review review) {
         reviews.add(review);
         review.changeUser(this);
-    }
-
-    public void addOrder(Order order) {
-        orders.add(order);
-        order.changeUser(this);
     }
 
     public void addFollow(Follow follow) {

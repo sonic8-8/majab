@@ -55,7 +55,6 @@ public class Order extends BaseEntity {
 
     public void changeUser(User user) {
         this.user = user;
-        user.getOrders().add(this);
     }
 
     public void changeStore(Store store) {
@@ -73,29 +72,24 @@ public class Order extends BaseEntity {
         orderItem.changeOrder(this);
     }
 
-    public static Order createOrder(LocalDateTime registeredDateTime, ArrayList<Item> items, int quantity) {
+    public static Order createOrder(LocalDateTime registeredDateTime, Item item, int quantity) {
         Order order =  Order.builder()
                 .orderStatus(OrderStatus.RESERVED)
                 .registeredDateTime(registeredDateTime)
                 .build();
 
-        /**
-         * 요구사항에서는 가게마다 상품을 한 개씩만 등록할 수 있도록 했으나
-         * 추후 상품을 여러 종류 등록할 수 있도록 하기 위해
-         * 미리 1:N 관계로 구현함
-         */
-        List<OrderItem> orderItems = items.stream()
-                .map(item -> OrderItem.builder()
-                        .order(order)
-                        .item(item)
-                        .price(item.getDiscountedPrice())
-                        .quantity(quantity)
-                        .build())
-                .toList();
+        OrderItem orderItem = OrderItem.builder()
+                .order(order)
+                .item(item)
+                .price(item.getDiscountedPrice())
+                .quantity(quantity)
+                .build();
 
-        for (OrderItem orderItem : orderItems) {
-            order.addOrderItem(orderItem);
-        }
+        /**
+         * 가게마다 상품이 하나씩만 존재하기 때문에 하나만 추가하도록 구현함
+         * 추후 가게에서 여러 상품을 판매할 수 있도록 하기 위해 List<OrderItem>으로 구현해놨음
+         */
+        order.addOrderItem(orderItem);
 
         return order;
     }
