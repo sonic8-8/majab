@@ -70,4 +70,17 @@ public class Order extends BaseEntity {
         orderItems.add(orderItem);
         orderItem.changeOrder(this);
     }
+
+    public static Order createOrder(OrderStatus orderStatus, LocalDateTime registeredDateTime, OrderItem... orderItems) {
+        Order order =  Order.builder()
+                .orderStatus(OrderStatus.RESERVED)
+                .registeredDateTime(LocalDateTime.now())
+                .build();
+
+        for (OrderItem orderItem : orderItems) {
+            order.addOrderItem(orderItem);
+        }
+
+        return order;
+    }
 }
