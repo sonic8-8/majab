@@ -47,6 +47,21 @@ public class Owner extends BaseEntity {
         this.stores.add(new Store(this));
     }
 
+    public void addOwnerReview(OwnerReview ownerReview) {
+        ownerReviews.add(ownerReview);
+        ownerReview.changeOwner(this);
+    }
+
+    public void addStore(Store store) {
+        stores.add(store);
+        store.changeOwner(this);
+    }
+
+    public void addNotice(Notice notice) {
+        notices.add(notice);
+        notice.changeOwner(this);
+    }
+
     public static Owner create() {
         return Owner.builder()
                 .email("email")

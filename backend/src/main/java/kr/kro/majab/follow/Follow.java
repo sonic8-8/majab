@@ -25,4 +25,14 @@ public class Follow extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "stores_id")
     private Store store;
+
+    public void changeUser(User user) {
+        this.user = user;
+        user.getFollows().add(this);
+    }
+
+    public void changeStore(Store store) {
+        this.store = store;
+        store.getFollows().add(this);
+    }
 }
