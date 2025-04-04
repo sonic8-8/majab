@@ -12,6 +12,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -30,6 +31,8 @@ public class Order extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private OrderStatus orderStatus;
 
+    public LocalDateTime orderDate;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "users_id")
     private User user;
@@ -45,11 +48,9 @@ public class Order extends BaseEntity {
     private List<OrderItem> orderItems = new ArrayList<>();
 
     @Builder
-    public Order(OrderStatus orderStatus, List<Item> items) {
+    public Order(OrderStatus orderStatus, LocalDateTime orderDate) {
         this.orderStatus = orderStatus;
-        this.orderItems = items.stream()
-                .map(item -> new OrderItem(0, 0, this, item))
-                .collect(Collectors.toList());
+        this.orderDate = orderDate;
     }
 
     //연관 관계 편의 메서드
