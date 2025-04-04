@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Getter
 @Entity
@@ -98,5 +98,11 @@ public class Order extends BaseEntity {
         }
 
         return order;
+    }
+
+    public int calculateTotalPrice(List<OrderItem> orderItems) {
+        return orderItems.stream()
+                .mapToInt(orderItem -> orderItem.getPrice() * orderItem.getQuantity())
+                .sum();
     }
 }
