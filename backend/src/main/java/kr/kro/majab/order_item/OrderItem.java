@@ -33,6 +33,7 @@ public class OrderItem extends BaseEntity {
     @JoinColumn(name = "items_id")
     private Item item;
 
+    @Builder
     public OrderItem(int quantity, int price, Order order, Item item) {
         this.quantity = quantity;
         this.price = price;

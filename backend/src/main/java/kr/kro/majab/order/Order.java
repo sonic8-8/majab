@@ -2,6 +2,7 @@ package kr.kro.majab.order;
 
 import jakarta.persistence.*;
 import kr.kro.majab.BaseEntity;
+import kr.kro.majab.item.Item;
 import kr.kro.majab.order_item.OrderItem;
 import kr.kro.majab.review.Review;
 import kr.kro.majab.store.Store;
@@ -14,6 +15,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Getter
 @Entity
@@ -71,11 +73,25 @@ public class Order extends BaseEntity {
         orderItem.changeOrder(this);
     }
 
-    public static Order createOrder(OrderStatus orderStatus, LocalDateTime registeredDateTime, OrderItem... orderItems) {
+    public static Order createOrder(LocalDateTime registeredDateTime, ArrayList<Item> items, int quantity) {
         Order order =  Order.builder()
                 .orderStatus(OrderStatus.RESERVED)
-                .registeredDateTime(LocalDateTime.now())
+                .registeredDateTime(registeredDateTime)
                 .build();
+
+        /**
+         * 요구사항에서는 가게마다 상품을 한 개씩만 등록할 수 있도록 했으나
+         * 추후 상품을 여러 종류 등록할 수 있도록 하기 위해
+         * 미리 1:N 관계로 구현함
+         */
+        List<OrderItem> orderItems = items.stream()
+                .map(item -> OrderItem.builder()
+                        .order(order)
+                        .item(item)
+                        .price(item.getDiscountedPrice())
+                        .quantity(quantity)
+                        .build())
+                .toList();
 
         for (OrderItem orderItem : orderItems) {
             order.addOrderItem(orderItem);
