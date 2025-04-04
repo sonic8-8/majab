@@ -46,4 +46,19 @@ public class Review extends BaseEntity {
         this.order = order;
         this.ownerReview = ownerReview;
     }
+
+    public void changeUser(User user) {
+        this.user = user;
+        user.getReviews().add(this);
+    }
+
+    public void changeOrder(Order order) {
+        this.order = order;
+        order.getReviews().add(this);
+    }
+
+    public void changeOwnerReview(OwnerReview ownerReview) {
+        this.ownerReview = ownerReview;
+        ownerReview.getReviews().add(this);
+    }
 }

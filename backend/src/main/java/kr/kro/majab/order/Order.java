@@ -2,16 +2,19 @@ package kr.kro.majab.order;
 
 import jakarta.persistence.*;
 import kr.kro.majab.BaseEntity;
+import kr.kro.majab.item.Item;
 import kr.kro.majab.order_item.OrderItem;
 import kr.kro.majab.review.Review;
 import kr.kro.majab.store.Store;
 import kr.kro.majab.user.User;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Getter
 @Entity
@@ -40,4 +43,33 @@ public class Order extends BaseEntity {
 
     @OneToMany(mappedBy = "order")
     private List<OrderItem> orderItems = new ArrayList<>();
+
+    @Builder
+    public Order(OrderStatus orderStatus, List<Item> items) {
+        this.orderStatus = orderStatus;
+        this.orderItems = items.stream()
+                .map(item -> new OrderItem(0, 0, this, item))
+                .collect(Collectors.toList());
+    }
+
+    //연관 관계 편의 메서드
+    public void changeUser(User user) {
+        this.user = user;
+        user.getOrders().add(this);
+    }
+
+    public void changeStore(Store store) {
+        this.store = store;
+        store.getOrders().add(this);
+    }
+
+    public void addReview(Review review) {
+        reviews.add(review);
+        review.changeOrder(this);
+    }
+
+    public void addOrderItem(OrderItem orderItem) {
+        orderItems.add(orderItem);
+        orderItem.changeOrder(this);
+    }
 }

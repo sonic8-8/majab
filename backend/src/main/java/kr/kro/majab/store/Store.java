@@ -72,4 +72,34 @@ public class Store extends BaseEntity {
         this.owner = owner;
         this.items.add(new Item(this));
     }
+
+    public void changeOwner(Owner owner) {
+        this.owner = owner;
+        owner.getStores().add(this);
+    }
+
+    public void changeCategory(Category category) {
+        this.category = category;
+        category.getStores().add(this);
+    }
+
+    public void addNotice(Notice notice) {
+        notices.add(notice);
+        notice.changeStore(this);
+    }
+
+    public void addFollow(Follow follow) {
+        follows.add(follow);
+        follow.changeStore(this);
+    }
+
+    public void addOrder(Order order) {
+        orders.add(order);
+        order.changeStore(this);
+    }
+
+    public void addItem(Item item) {
+        items.add(item);
+        item.changeStore(this);
+    }
 }

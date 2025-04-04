@@ -34,4 +34,14 @@ public class Notice extends BaseEntity {
     private Owner owner;
 
     //작성날짜
+
+    public void changeStore(Store store) {
+        this.store = store;
+        store.getNotices().add(this);
+    }
+
+    public void changeOwner(Owner owner) {
+        this.owner = owner;
+        owner.getNotices().add(this);
+    }
 }

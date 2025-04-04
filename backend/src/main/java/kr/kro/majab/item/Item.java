@@ -49,6 +49,17 @@ public class Item extends BaseEntity {
         this.store = store;
     }
 
+    public void changeStore(Store store) {
+        this.store = store;
+        store.getItems().add(this);
+    }
+
+    public void addOrderItem(OrderItem orderItem) {
+        orderItems.add(orderItem);
+        orderItem.changeItem(this);
+    }
+
+
     public void updateInfo(int originalPrice, int discountedPrice, String description) {
         this.originalPrice = originalPrice;
         this.discountedPrice = discountedPrice;

@@ -30,4 +30,9 @@ public class Category extends BaseEntity {
         this.id = id;
         this.name = name;
     }
+
+    public void addStore(Store store) {
+        stores.add(store);
+        store.changeCategory(this);
+    }
 }

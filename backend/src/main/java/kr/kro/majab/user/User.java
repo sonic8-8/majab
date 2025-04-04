@@ -2,6 +2,8 @@ package kr.kro.majab.user;
 
 import jakarta.persistence.*;
 import kr.kro.majab.BaseEntity;
+import kr.kro.majab.address.Address;
+import kr.kro.majab.follow.Follow;
 import kr.kro.majab.order.Order;
 import kr.kro.majab.review.Review;
 import lombok.AccessLevel;
@@ -37,6 +39,12 @@ public class User extends BaseEntity {
     @OneToMany(mappedBy = "user")
     private List<Order> orders = new ArrayList<>();
 
+    @OneToMany(mappedBy = "user")
+    private List<Follow> follows = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user")
+    private List<Address> addresses = new ArrayList<>();
+
     public User(String email, String password, String loginType, String nickname, String phoneNumber) {
         this.email = email;
         this.password = password;
@@ -45,4 +53,23 @@ public class User extends BaseEntity {
         this.phoneNumber = phoneNumber;
     }
 
+    public void addReview(Review review) {
+        reviews.add(review);
+        review.changeUser(this);
+    }
+
+    public void addOrder(Order order) {
+        orders.add(order);
+        order.changeUser(this);
+    }
+
+    public void addFollow(Follow follow) {
+        follows.add(follow);
+        follow.changeUser(this);
+    }
+
+    public void addAddress(Address address) {
+        addresses.add(address);
+        address.changeUser(this);
+    }
 }
