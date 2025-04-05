@@ -3,7 +3,6 @@ package kr.kro.majab.owner;
 import jakarta.persistence.*;
 import kr.kro.majab.BaseEntity;
 import kr.kro.majab.notice.Notice;
-import kr.kro.majab.owner_review.OwnerReview;
 import kr.kro.majab.store.Store;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -31,9 +30,6 @@ public class Owner extends BaseEntity {
     private String phoneNumber;
 
     @OneToMany(mappedBy = "owner")
-    private List<OwnerReview> ownerReviews = new ArrayList<>();
-
-    @OneToMany(mappedBy = "owner")
     private List<Notice> notices = new ArrayList<>();
 
     @OneToMany(mappedBy = "owner")
@@ -46,9 +42,10 @@ public class Owner extends BaseEntity {
         this.phoneNumber = phoneNumber;
     }
 
-    public void addOwnerReview(OwnerReview ownerReview) {
-        ownerReviews.add(ownerReview);
-        ownerReview.changeOwner(this);
+    public static Owner create() {
+        return Owner.builder()
+                .email("email")
+                .build();
     }
 
     public void addStore(Store store) {
@@ -59,11 +56,5 @@ public class Owner extends BaseEntity {
     public void addNotice(Notice notice) {
         notices.add(notice);
         notice.changeOwner(this);
-    }
-
-    public static Owner create() {
-        return Owner.builder()
-                .email("email")
-                .build();
     }
 }

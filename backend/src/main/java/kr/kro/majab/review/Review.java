@@ -3,8 +3,7 @@ package kr.kro.majab.review;
 import jakarta.persistence.*;
 import kr.kro.majab.BaseEntity;
 import kr.kro.majab.order.Order;
-import kr.kro.majab.owner_review.OwnerReview;
-import kr.kro.majab.user.User;
+import kr.kro.majab.owner_comment.OwnerComment;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,37 +26,32 @@ public class Review extends BaseEntity {
     private String pictureUrl;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "users_id")
-    private User user;
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "orders_id")
     private Order order;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner_reviews_id")
-    private OwnerReview ownerReview;
+    @OneToOne(mappedBy = "review", fetch = FetchType.LAZY)
+    private OwnerComment ownerComment;
 
-    public Review(int star, String content, String pictureUrl, User user, Order order, OwnerReview ownerReview) {
+    public Review(int star, String content, String pictureUrl, Order order, OwnerComment ownerComment) {
         this.star = star;
         this.content = content;
         this.pictureUrl = pictureUrl;
-        this.user = user;
         this.order = order;
-        this.ownerReview = ownerReview;
-    }
-
-    public void changeUser(User user) {
-        this.user = user;
-        user.getReviews().add(this);
+        this.ownerComment = ownerComment;
     }
 
     public void changeOrder(Order order) {
         this.order = order;
     }
 
-    public void changeOwnerReview(OwnerReview ownerReview) {
-        this.ownerReview = ownerReview;
-        ownerReview.getReviews().add(this);
+    public void changeOwnerComment (OwnerComment ownerComment) {
+        if (this.ownerComment != null) {
+            this.ownerComment.changeReview(null);
+        }
+        this.ownerComment = ownerComment;
+
+        if (ownerComment != null && ownerComment.getReview() != this) {
+            ownerComment.changeReview(this);
+        }
     }
 }

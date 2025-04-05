@@ -35,9 +35,6 @@ public class User extends BaseEntity {
     private String phoneNumber;
 
     @OneToMany(mappedBy = "user")
-    private List<Review> reviews = new ArrayList<>();
-
-    @OneToMany(mappedBy = "user")
     private List<Follow> follows = new ArrayList<>();
 
     @OneToMany(mappedBy = "user")
@@ -50,11 +47,6 @@ public class User extends BaseEntity {
         this.loginType = loginType;
         this.nickname = nickname;
         this.phoneNumber = phoneNumber;
-    }
-
-    public void addReview(Review review) {
-        reviews.add(review);
-        review.changeUser(this);
     }
 
     public void addFollow(Follow follow) {
