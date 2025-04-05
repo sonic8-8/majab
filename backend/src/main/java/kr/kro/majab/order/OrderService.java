@@ -6,7 +6,9 @@ import kr.kro.majab.order.request.CancelOrderRequest;
 import kr.kro.majab.order.request.CreateOrderRequest;
 import kr.kro.majab.order.response.CancelOrderResponse;
 import kr.kro.majab.order.response.CreateOrderResponse;
+import kr.kro.majab.store.Store;
 import kr.kro.majab.store.StoreRepository;
+import kr.kro.majab.store.StoreStatus;
 import kr.kro.majab.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -31,11 +33,18 @@ public class OrderService {
     @Transactional
     public CreateOrderResponse createOrder(CreateOrderRequest request, LocalDateTime registeredDateTime) {
 
+        Store store = storeRepository.findById(request.getStoreId())
+                .orElseThrow(() -> new NoSuchElementException("해당 가게가 존재하지 않습니다"));
+
+        if (store.getStoreStatus() != StoreStatus.OPEN) {
+            throw new IllegalStateException("가게가 운영 중이지 않습니다");
+        }
+
         Item item = itemRepository.findById(request.getItemId())
                 .orElseThrow(() -> new NoSuchElementException("해당 상품이 존재하지 않습니다"));
 
         if (item.getStock() < 1) {
-            throw new RuntimeException("상품 재고가 없습니다");
+            throw new IllegalStateException("상품 재고가 없습니다");
         }
 
         if (item.isStockLessThan(request.getQuantity())) {
