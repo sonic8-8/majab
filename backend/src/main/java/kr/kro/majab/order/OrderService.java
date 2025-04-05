@@ -12,6 +12,7 @@ import kr.kro.majab.store.StoreStatus;
 import kr.kro.majab.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -27,9 +28,6 @@ public class OrderService {
     private final StoreRepository storeRepository;
     private final ItemRepository itemRepository;
 
-    /**
-     * todo: 상품 주문 동시성 문제 해결
-     */
     @Transactional
     public CreateOrderResponse createOrder(CreateOrderRequest request, LocalDateTime registeredDateTime) {
 
@@ -40,7 +38,7 @@ public class OrderService {
             throw new IllegalStateException("가게가 운영 중이지 않습니다");
         }
 
-        Item item = itemRepository.findById(request.getItemId())
+        Item item = itemRepository.findByIdWithPessimisticLock(request.getItemId())
                 .orElseThrow(() -> new NoSuchElementException("해당 상품이 존재하지 않습니다"));
 
         if (item.getStock() < 1) {

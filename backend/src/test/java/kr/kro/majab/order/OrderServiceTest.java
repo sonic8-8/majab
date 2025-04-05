@@ -1,5 +1,7 @@
 package kr.kro.majab.order;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import kr.kro.majab.item.Item;
 import kr.kro.majab.item.ItemRepository;
 import kr.kro.majab.order.request.CreateOrderRequest;
@@ -10,9 +12,7 @@ import kr.kro.majab.store.StoreStatus;
 import kr.kro.majab.user.User;
 import kr.kro.majab.user.UserRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,12 +23,14 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @Transactional
+//@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Slf4j
 class OrderServiceTest {
 
@@ -304,4 +306,66 @@ class OrderServiceTest {
         assertThat(orderRepository.findAll()).isEmpty();
     }
 
+    /**
+     * 동시성 테스트: 필요 시 수동으로 실행하기
+     * @Transactional 주석 처리 후
+     * @TestInstance(TestInstance.Life_cycle.PER_CLASS) 설정 후 실행
+     */
+//    Item item;
+//    Store store;
+//    User user;
+//
+//    @BeforeAll
+//    void setUp() {
+//        item = createItem(10, 3000);
+//        itemRepository.saveAndFlush(item);
+//
+//        store = createStore("가게", StoreStatus.OPEN);
+//        storeRepository.saveAndFlush(store);
+//
+//        user = createUser("사용자");
+//        userRepository.saveAndFlush(user);
+//    }
+//
+//    @DisplayName("동시 주문 요청 시 재고 수량이 정확히 감소한다")
+//    @Test
+//    void concurrent_createOrder_with_pessimistic_lock() throws InterruptedException {
+//        // given
+//        int threadCount = 10;
+//        ExecutorService executor = Executors.newFixedThreadPool(10);
+//        CountDownLatch latch = new CountDownLatch(10);
+//
+//        LocalDateTime registeredDateTime = LocalDateTime.now();
+//
+//        // when
+//        for (int i = 0; i < threadCount; i++) {
+//            executor.submit(() -> {
+//                try {
+//                    log.info("request 생성 전");
+//                    CreateOrderRequest request = CreateOrderRequest.builder()
+//                            .itemId(item.getId())
+//                            .storeId(store.getId())
+//                            .userId(user.getId())
+//                            .quantity(1)
+//                            .storeStatus(store.getStoreStatus())
+//                            .build();
+//
+//                    log.info("request 생성 후");
+//                    log.info("저장된 가게: {}", storeRepository.findById(store.getId()).toString());
+//
+//                    orderService.createOrder(request, registeredDateTime);
+//                } catch (Exception e) {
+//                    log.error("예외 발생: {}", e.getMessage());
+//                } finally {
+//                    latch.countDown();
+//                }
+//            });
+//        }
+//
+//        latch.await(10, TimeUnit.SECONDS);
+//
+//        // then
+//        Item updatedItem = itemRepository.findAll().get(0);
+//        assertThat(updatedItem.getStock()).isEqualTo(0);
+//    }
 }
