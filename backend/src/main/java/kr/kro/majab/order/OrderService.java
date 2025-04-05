@@ -77,6 +77,14 @@ public class OrderService {
             throw new IllegalArgumentException("사용자와 주문자가 일치하지 않습니다");
         }
 
+        if (order.getOrderStatus().equals(OrderStatus.COMPLETED)) {
+            throw new IllegalStateException("이미 판매 완료된 주문입니다");
+        }
+
+        if (order.getOrderStatus().equals(OrderStatus.CANCELED)) {
+            throw new IllegalStateException("이미 취소된 주문입니다");
+        }
+
         order.updateOrderStatus(OrderStatus.CANCELED);
         order.getOrderItems()
                 .forEach(orderItem -> orderItem.getItem().updateStock(orderItem.getItem().getStock() + orderItem.getQuantity()));
@@ -95,7 +103,15 @@ public class OrderService {
                 .orElseThrow(() -> new NoSuchElementException("해당 주문이 존재하지 않습니다"));
 
         if (order.getStore().getId() != store.getId()) {
-            throw new IllegalArgumentException("가게와 주문이 일치하지 않습니다");
+            throw new IllegalArgumentException("가게 정보가 일치하지 않습니다");
+        }
+
+        if (order.getOrderStatus().equals(OrderStatus.COMPLETED)) {
+            throw new IllegalStateException("이미 판매 완료된 주문입니다");
+        }
+
+        if (order.getOrderStatus().equals(OrderStatus.CANCELED)) {
+            throw new IllegalStateException("이미 취소된 주문입니다");
         }
 
         order.updateOrderStatus(OrderStatus.CANCELED);

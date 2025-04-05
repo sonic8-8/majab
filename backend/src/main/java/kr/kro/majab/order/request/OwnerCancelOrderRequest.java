@@ -2,6 +2,7 @@ package kr.kro.majab.order.request;
 
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
 import lombok.Getter;
 
 @Getter
@@ -15,4 +16,10 @@ public class OwnerCancelOrderRequest {
 
     @NotNull(message = "주문 id는 필수값입니다")
     private Long orderId;
+
+    @Builder
+    public OwnerCancelOrderRequest(Long storeId, Long orderId) {
+        this.storeId = storeId;
+        this.orderId = orderId;
+    }
 }
