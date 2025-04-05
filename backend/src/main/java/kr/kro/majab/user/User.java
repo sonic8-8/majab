@@ -7,6 +7,7 @@ import kr.kro.majab.follow.Follow;
 import kr.kro.majab.order.Order;
 import kr.kro.majab.review.Review;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -34,33 +35,18 @@ public class User extends BaseEntity {
     private String phoneNumber;
 
     @OneToMany(mappedBy = "user")
-    private List<Review> reviews = new ArrayList<>();
-
-    @OneToMany(mappedBy = "user")
-    private List<Order> orders = new ArrayList<>();
-
-    @OneToMany(mappedBy = "user")
     private List<Follow> follows = new ArrayList<>();
 
     @OneToMany(mappedBy = "user")
     private List<Address> addresses = new ArrayList<>();
 
+    @Builder
     public User(String email, String password, String loginType, String nickname, String phoneNumber) {
         this.email = email;
         this.password = password;
         this.loginType = loginType;
         this.nickname = nickname;
         this.phoneNumber = phoneNumber;
-    }
-
-    public void addReview(Review review) {
-        reviews.add(review);
-        review.changeUser(this);
-    }
-
-    public void addOrder(Order order) {
-        orders.add(order);
-        order.changeUser(this);
     }
 
     public void addFollow(Follow follow) {

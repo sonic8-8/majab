@@ -2,6 +2,7 @@ package kr.kro.majab.order;
 
 import jakarta.persistence.*;
 import kr.kro.majab.BaseEntity;
+import kr.kro.majab.item.Item;
 import kr.kro.majab.order_item.OrderItem;
 import kr.kro.majab.review.Review;
 import kr.kro.majab.store.Store;
@@ -14,6 +15,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Getter
 @Entity
@@ -39,8 +41,8 @@ public class Order extends BaseEntity {
     @JoinColumn(name = "stores_id")
     private Store store;
 
-    @OneToMany(mappedBy = "order")
-    private List<Review> reviews = new ArrayList<>();
+    @OneToOne(fetch = FetchType.LAZY)
+    private Review review;
 
     @OneToMany(mappedBy = "order")
     private List<OrderItem> orderItems = new ArrayList<>();
@@ -53,7 +55,6 @@ public class Order extends BaseEntity {
 
     public void changeUser(User user) {
         this.user = user;
-        user.getOrders().add(this);
     }
 
     public void changeStore(Store store) {
@@ -61,9 +62,16 @@ public class Order extends BaseEntity {
         store.getOrders().add(this);
     }
 
-    public void addReview(Review review) {
-        reviews.add(review);
-        review.changeOrder(this);
+    public void changeReview(Review review) {
+        if (this.review != null) {
+            this.review.changeOrder(null);
+        }
+
+        this.review = review;
+
+        if (review != null & review.getOrder() != this) {
+            review.changeOrder(this);
+        }
     }
 
     public void addOrderItem(OrderItem orderItem) {
@@ -71,16 +79,32 @@ public class Order extends BaseEntity {
         orderItem.changeOrder(this);
     }
 
-    public static Order createOrder(OrderStatus orderStatus, LocalDateTime registeredDateTime, OrderItem... orderItems) {
+    public static Order createOrder(LocalDateTime registeredDateTime, Item item, int quantity) {
         Order order =  Order.builder()
                 .orderStatus(OrderStatus.RESERVED)
-                .registeredDateTime(LocalDateTime.now())
+                .registeredDateTime(registeredDateTime)
                 .build();
 
-        for (OrderItem orderItem : orderItems) {
-            order.addOrderItem(orderItem);
-        }
+        OrderItem orderItem = OrderItem.builder()
+                .price(item.getDiscountedPrice())
+                .quantity(quantity)
+                .build();
+
+        orderItem.changeItem(item);
+        orderItem.changeOrder(order);
+
+        /**
+         * 가게마다 상품이 하나씩만 존재하기 때문에 하나만 추가하도록 구현함
+         * 추후 가게에서 여러 상품을 판매할 수 있도록 하기 위해 List<OrderItem>으로 구현해놨음
+         */
+        order.addOrderItem(orderItem);
 
         return order;
+    }
+
+    public int calculateTotalPrice(List<OrderItem> orderItems) {
+        return orderItems.stream()
+                .mapToInt(orderItem -> orderItem.getPrice() * orderItem.getQuantity())
+                .sum();
     }
 }
