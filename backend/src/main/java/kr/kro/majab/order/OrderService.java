@@ -37,6 +37,10 @@ public class OrderService {
         if (item.getStock() < 1) {
             throw new RuntimeException("상품 재고가 없습니다");
         }
+
+        if (item.isStockLessThan(request.getQuantity())) {
+            throw new IllegalArgumentException("상품 재고가 부족합니다");
+        }
         item.deductStock(request.getQuantity());
 
         Order order = Order.createOrder(registeredDateTime, item, request.getQuantity());

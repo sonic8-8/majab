@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @Transactional
@@ -82,7 +83,35 @@ class OrderServiceTest {
 
     @DisplayName("재고 수량이 부족한 제품을 주문할 경우 예외가 발생한다")
     @Test
-    void test() {
+    void createOrderStockException() {
+        // given
+        LocalDateTime registeredDateTime = LocalDateTime.now();
+
+        Item item = createItem(10, 3000);
+        itemRepository.save(item);
+
+        Store store = createStore("가게");
+        storeRepository.save(store);
+
+        User user = createUser("사용자");
+        userRepository.save(user);
+
+        CreateOrderRequest request = CreateOrderRequest.builder()
+                .userId(user.getId())
+                .storeId(store.getId())
+                .itemId(item.getId())
+                .quantity(11)
+                .build();
+
+        // when then
+        assertThatThrownBy(() -> orderService.createOrder(request, registeredDateTime))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("상품 재고가 부족합니다");
+    }
+
+    @DisplayName("가게가 운영중이지 않을 때 주문하면 예외가 발생한다")
+    @Test
+    void createOrderStoreStatusException() {
         // given
 
         // when
