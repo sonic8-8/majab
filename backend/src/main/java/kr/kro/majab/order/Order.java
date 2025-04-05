@@ -107,4 +107,8 @@ public class Order extends BaseEntity {
                 .mapToInt(orderItem -> orderItem.getPrice() * orderItem.getQuantity())
                 .sum();
     }
+
+    public void updateOrderStatus(OrderStatus orderStatus) {
+        this.orderStatus = orderStatus;
+    }
 }

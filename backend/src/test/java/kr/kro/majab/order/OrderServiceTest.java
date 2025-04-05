@@ -1,7 +1,5 @@
 package kr.kro.majab.order;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import kr.kro.majab.item.Item;
 import kr.kro.majab.item.ItemRepository;
 import kr.kro.majab.order.request.CreateOrderRequest;
@@ -12,18 +10,15 @@ import kr.kro.majab.store.StoreStatus;
 import kr.kro.majab.user.User;
 import kr.kro.majab.user.UserRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.NoSuchElementException;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -104,7 +99,7 @@ class OrderServiceTest {
         CreateOrderResponse orderResponse = orderService.createOrder(request, registeredDateTime);
 
         // then
-        assertThat(orderResponse.getId()).isNotNull();
+        assertThat(orderResponse.getOrderId()).isNotNull();
         assertThat(orderResponse.getQuantity()).isEqualTo(5);
         assertThat(orderResponse.getTotalPrice()).isEqualTo(15000);
         assertThat(orderResponse.getRegisteredDateTime()).isEqualTo(registeredDateTime);
