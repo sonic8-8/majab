@@ -4,11 +4,12 @@ import jakarta.persistence.*;
 import kr.kro.majab.BaseEntity;
 import kr.kro.majab.item.Item;
 import kr.kro.majab.order.Order;
-import kr.kro.majab.order.OrderStatus;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.Objects;
 
 @Getter
 @Entity
@@ -34,20 +35,33 @@ public class OrderItem extends BaseEntity {
     private Item item;
 
     @Builder
-    public OrderItem(int quantity, int price, Order order, Item item) {
+    public OrderItem(int quantity, int price) {
         this.quantity = quantity;
         this.price = price;
-        this.order = order;
-        this.item = item;
     }
 
     public void changeOrder(Order order) {
         this.order = order;
-        order.getOrderItems().add(this);
     }
 
     public void changeItem(Item item) {
         this.item = item;
-        item.getOrderItems().add(this);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        OrderItem orderItem = (OrderItem) o;
+        return quantity == orderItem.quantity
+                && price == orderItem.price
+                && Objects.equals(id, orderItem.id)
+                && Objects.equals(order, orderItem.order)
+                && Objects.equals(item, orderItem.item);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, quantity, price, order, item);
     }
 }

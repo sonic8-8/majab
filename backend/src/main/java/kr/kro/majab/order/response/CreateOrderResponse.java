@@ -3,9 +3,11 @@ package kr.kro.majab.order.response;
 import kr.kro.majab.order.Order;
 import kr.kro.majab.order_item.OrderItem;
 import lombok.Builder;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 
+@Getter
 public class CreateOrderResponse {
 
     private Long id;

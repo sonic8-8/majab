@@ -4,6 +4,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import kr.kro.majab.item.Item;
 import kr.kro.majab.store.StoreStatus;
+import lombok.Builder;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -26,4 +27,13 @@ public class CreateOrderRequest {
     @NotEmpty(message = "상품 수량은 필수값입니다")
     @Min(value = 1, message = "상품 수량은 1개 이상 주문해주세요")
     private int quantity;
+
+    @Builder
+    public CreateOrderRequest(Long userId, Long storeId, Long itemId, StoreStatus storeStatus, int quantity) {
+        this.userId = userId;
+        this.storeId = storeId;
+        this.itemId = itemId;
+        this.storeStatus = storeStatus;
+        this.quantity = quantity;
+    }
 }

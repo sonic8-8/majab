@@ -29,7 +29,7 @@ public class OrderService {
      * todo: 상품 주문 동시성 문제 해결
      */
     @Transactional
-    public CreateOrderResponse createOrder(CreateOrderRequest request) {
+    public CreateOrderResponse createOrder(CreateOrderRequest request, LocalDateTime registeredDateTime) {
 
         Item item = itemRepository.findById(request.getItemId())
                 .orElseThrow(() -> new NoSuchElementException("해당 상품이 존재하지 않습니다"));
@@ -39,7 +39,7 @@ public class OrderService {
         }
         item.deductStock(request.getQuantity());
 
-        Order order = Order.createOrder(LocalDateTime.now(), item, request.getQuantity());
+        Order order = Order.createOrder(registeredDateTime, item, request.getQuantity());
 
         order.changeStore(storeRepository.findById(request.getStoreId())
                 .orElseThrow(() -> new NoSuchElementException("해당 가게가 존재하지 않습니다")));

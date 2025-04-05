@@ -23,17 +23,18 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Store extends BaseEntity {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "stores_id")
     private Long id;
 
-    private String name = "가게명을 입력하세요";
+    private String name;
 
-    private String ownerName = "대표자명";
-    private String businessName = "상호명";
-    private String businessAddress = "사업자 주소";
-    private String businessNumber = "사업자등록번호";
-    private String phoneNumber = "전화번호";
+    private String ownerName;
+    private String businessName;
+    private String businessAddress;
+    private String businessNumber;
+    private String phoneNumber;
 
     @Enumerated(EnumType.STRING)
     private StoreStatus storeStatus = StoreStatus.CLOSE;
@@ -68,9 +69,20 @@ public class Store extends BaseEntity {
     private List<Item> items = new ArrayList<>();
 
     @Builder
-    public Store(Owner owner) {
-        this.owner = owner;
-        this.items.add(new Item(this));
+    public Store(String name, String ownerName, String businessName, String businessAddress, String businessNumber, String phoneNumber, StoreStatus storeStatus, LocalDateTime pickupStartTime, LocalDateTime pickupEndTime, LocalDateTime suspendedStartTime, LocalDateTime suspendedEndTime, LocalDateTime openTime, LocalDateTime closeTime) {
+        this.name = name;
+        this.ownerName = ownerName;
+        this.businessName = businessName;
+        this.businessAddress = businessAddress;
+        this.businessNumber = businessNumber;
+        this.phoneNumber = phoneNumber;
+        this.storeStatus = storeStatus;
+        this.pickupStartTime = pickupStartTime;
+        this.pickupEndTime = pickupEndTime;
+        this.suspendedStartTime = suspendedStartTime;
+        this.suspendedEndTime = suspendedEndTime;
+        this.openTime = openTime;
+        this.closeTime = closeTime;
     }
 
     public void changeOwner(Owner owner) {

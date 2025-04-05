@@ -79,11 +79,12 @@ public class Order extends BaseEntity {
                 .build();
 
         OrderItem orderItem = OrderItem.builder()
-                .order(order)
-                .item(item)
                 .price(item.getDiscountedPrice())
                 .quantity(quantity)
                 .build();
+
+        orderItem.changeItem(item);
+        orderItem.changeOrder(order);
 
         /**
          * 가게마다 상품이 하나씩만 존재하기 때문에 하나만 추가하도록 구현함

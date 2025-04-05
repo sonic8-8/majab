@@ -44,7 +44,6 @@ public class Owner extends BaseEntity {
         this.email = email;
         this.password = password;
         this.phoneNumber = phoneNumber;
-        this.stores.add(new Store(this));
     }
 
     public void addOwnerReview(OwnerReview ownerReview) {
