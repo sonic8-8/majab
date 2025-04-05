@@ -5,7 +5,12 @@ import jakarta.persistence.PersistenceContext;
 import kr.kro.majab.item.Item;
 import kr.kro.majab.item.ItemRepository;
 import kr.kro.majab.order.request.CreateOrderRequest;
+import kr.kro.majab.order.request.OwnerCancelOrderRequest;
+import kr.kro.majab.order.request.UserCancelOrderRequest;
 import kr.kro.majab.order.response.CreateOrderResponse;
+import kr.kro.majab.order.response.OwnerCancelOrderResponse;
+import kr.kro.majab.order.response.UserCancelOrderResponse;
+import kr.kro.majab.owner.Owner;
 import kr.kro.majab.store.Store;
 import kr.kro.majab.store.StoreRepository;
 import kr.kro.majab.store.StoreStatus;
@@ -15,21 +20,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.NoSuchElementException;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @Transactional
+@ActiveProfiles("test")
 //@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Slf4j
 class OrderServiceTest {
@@ -69,6 +71,12 @@ class OrderServiceTest {
                 .build();
     }
 
+    private Owner createOwner(String email) {
+        return Owner.builder()
+                .email(email)
+                .build();
+    }
+
     @AfterEach
     void tearDown() {
         orderRepository.deleteAllInBatch();
@@ -77,240 +85,245 @@ class OrderServiceTest {
         storeRepository.deleteAllInBatch();
     }
 
-    @DisplayName("사용자 요청시 주문을 생성한다")
-    @Test
-    void createOrder() {
-        // given
-        LocalDateTime registeredDateTime = LocalDateTime.now();
+    @Nested
+    @DisplayName("주문 생성")
+    class createOrder {
 
-        Item item = createItem(10, 3000);
-        itemRepository.save(item);
+        @DisplayName("사용자는 주문을 생성할 수 있다")
+        @Test
+        void createOrder() {
+            // given
+            LocalDateTime registeredDateTime = LocalDateTime.now();
 
-        User user = createUser("사용자");
-        userRepository.save(user);
+            Item item = createItem(10, 3000);
+            itemRepository.save(item);
 
-        Store store = createStore("가게", StoreStatus.OPEN);
-        storeRepository.save(store);
+            User user = createUser("사용자");
+            userRepository.save(user);
 
-        CreateOrderRequest request = CreateOrderRequest.builder()
-                .itemId(item.getId())
-                .storeId(store.getId())
-                .userId(user.getId())
-                .quantity(5)
-                .storeStatus(store.getStoreStatus())
-                .build();
+            Store store = createStore("가게", StoreStatus.OPEN);
+            storeRepository.save(store);
 
-        // when
-        CreateOrderResponse orderResponse = orderService.createOrder(request, registeredDateTime);
+            CreateOrderRequest request = CreateOrderRequest.builder()
+                    .itemId(item.getId())
+                    .storeId(store.getId())
+                    .userId(user.getId())
+                    .quantity(5)
+                    .storeStatus(store.getStoreStatus())
+                    .build();
 
-        // then
-        assertThat(orderResponse.getId()).isNotNull();
-        assertThat(orderResponse.getQuantity()).isEqualTo(5);
-        assertThat(orderResponse.getTotalPrice()).isEqualTo(15000);
-        assertThat(orderResponse.getRegisteredDateTime()).isEqualTo(registeredDateTime);
-    }
+            // when
+            CreateOrderResponse orderResponse = orderService.createOrder(request, registeredDateTime);
 
-    @DisplayName("재고 수량이 부족한 제품을 주문할 경우 예외가 발생한다")
-    @Test
-    void createOrder_StockException() {
-        // given
-        LocalDateTime registeredDateTime = LocalDateTime.now();
+            // then
+            assertThat(orderResponse.getOrderId()).isNotNull();
+            assertThat(orderResponse.getQuantity()).isEqualTo(5);
+            assertThat(orderResponse.getTotalPrice()).isEqualTo(15000);
+            assertThat(orderResponse.getRegisteredDateTime()).isEqualTo(registeredDateTime);
+        }
 
-        Item item = createItem(10, 3000);
-        itemRepository.save(item);
+        @DisplayName("재고 수량이 부족한 제품을 주문할 경우 예외가 발생한다")
+        @Test
+        void createOrder_StockException() {
+            // given
+            LocalDateTime registeredDateTime = LocalDateTime.now();
 
-        Store store = createStore("가게", StoreStatus.OPEN);
-        storeRepository.save(store);
+            Item item = createItem(10, 3000);
+            itemRepository.save(item);
 
-        User user = createUser("사용자");
-        userRepository.save(user);
+            Store store = createStore("가게", StoreStatus.OPEN);
+            storeRepository.save(store);
 
-        CreateOrderRequest request = CreateOrderRequest.builder()
-                .userId(user.getId())
-                .storeId(store.getId())
-                .itemId(item.getId())
-                .quantity(11)
-                .storeStatus(store.getStoreStatus())
-                .build();
+            User user = createUser("사용자");
+            userRepository.save(user);
 
-        // when then
-        assertThatThrownBy(() -> orderService.createOrder(request, registeredDateTime))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("상품 재고가 부족합니다");
-    }
+            CreateOrderRequest request = CreateOrderRequest.builder()
+                    .userId(user.getId())
+                    .storeId(store.getId())
+                    .itemId(item.getId())
+                    .quantity(11)
+                    .storeStatus(store.getStoreStatus())
+                    .build();
 
-    @DisplayName("가게가 운영 상태가 아닐 경우 주문하면 예외가 발생한다")
-    @Test
-    void createOrderStoreStatusException() {
-        // given
-        LocalDateTime registeredDateTime = LocalDateTime.now();
+            // when then
+            assertThatThrownBy(() -> orderService.createOrder(request, registeredDateTime))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("상품 재고가 부족합니다");
+        }
 
-        Item item = createItem(10, 3000);
-        itemRepository.save(item);
+        @DisplayName("가게가 운영 상태가 아닐 경우 주문하면 예외가 발생한다")
+        @Test
+        void createOrderStoreStatusException() {
+            // given
+            LocalDateTime registeredDateTime = LocalDateTime.now();
 
-        Store store = createStore("가게", StoreStatus.CLOSE);
-        storeRepository.save(store);
+            Item item = createItem(10, 3000);
+            itemRepository.save(item);
 
-        User user = createUser("사용자");
-        userRepository.save(user);
+            Store store = createStore("가게", StoreStatus.CLOSE);
+            storeRepository.save(store);
 
-        CreateOrderRequest request = CreateOrderRequest.builder()
-                .quantity(5)
-                .itemId(item.getId())
-                .storeId(store.getId())
-                .userId(user.getId())
-                .storeStatus(store.getStoreStatus())
-                .build();
+            User user = createUser("사용자");
+            userRepository.save(user);
 
-        // when then
-        assertThatThrownBy(() -> orderService.createOrder(request, registeredDateTime))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessage("가게가 운영 중이지 않습니다");
-    }
+            CreateOrderRequest request = CreateOrderRequest.builder()
+                    .quantity(5)
+                    .itemId(item.getId())
+                    .storeId(store.getId())
+                    .userId(user.getId())
+                    .storeStatus(store.getStoreStatus())
+                    .build();
 
-    @DisplayName("재고 수량이 0인 상품을 주문할 경우 예외가 발생한다")
-    @Test
-    void createOrderExceptionZeroQuantity() {
-        // given
-        LocalDateTime registeredDateTime = LocalDateTime.now();
+            // when then
+            assertThatThrownBy(() -> orderService.createOrder(request, registeredDateTime))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessage("가게가 운영 중이지 않습니다");
+        }
 
-        Item item = createItem(0, 3000);
-        itemRepository.save(item);
+        @DisplayName("재고 수량이 0인 상품을 주문할 경우 예외가 발생한다")
+        @Test
+        void createOrderExceptionZeroQuantity() {
+            // given
+            LocalDateTime registeredDateTime = LocalDateTime.now();
 
-        Store store = createStore("가게", StoreStatus.OPEN);
-        storeRepository.save(store);
+            Item item = createItem(0, 3000);
+            itemRepository.save(item);
 
-        User user = createUser("사용자");
-        userRepository.save(user);
+            Store store = createStore("가게", StoreStatus.OPEN);
+            storeRepository.save(store);
 
-        CreateOrderRequest request = CreateOrderRequest.builder()
-                .quantity(5)
-                .itemId(item.getId())
-                .storeId(store.getId())
-                .userId(user.getId())
-                .storeStatus(store.getStoreStatus())
-                .build();
+            User user = createUser("사용자");
+            userRepository.save(user);
 
-        // when then
-        assertThatThrownBy(() -> orderService.createOrder(request, registeredDateTime))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessage("상품 재고가 없습니다");
-    }
+            CreateOrderRequest request = CreateOrderRequest.builder()
+                    .quantity(5)
+                    .itemId(item.getId())
+                    .storeId(store.getId())
+                    .userId(user.getId())
+                    .storeStatus(store.getStoreStatus())
+                    .build();
 
-    @DisplayName("존재하지 않는 사용자가 주문할 경우 예외가 발생한다")
-    @Test
-    void createOrderException_UserNotExist() {
-        // given
-        LocalDateTime registeredDateTime = LocalDateTime.now();
+            // when then
+            assertThatThrownBy(() -> orderService.createOrder(request, registeredDateTime))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessage("상품 재고가 없습니다");
+        }
 
-        Item item = createItem(10, 3000);
-        itemRepository.save(item);
+        @DisplayName("존재하지 않는 사용자가 주문할 경우 예외가 발생한다")
+        @Test
+        void createOrderException_UserNotExist() {
+            // given
+            LocalDateTime registeredDateTime = LocalDateTime.now();
 
-        Store store = createStore("가게", StoreStatus.OPEN);
-        storeRepository.save(store);
+            Item item = createItem(10, 3000);
+            itemRepository.save(item);
 
-        CreateOrderRequest request = CreateOrderRequest.builder()
-                .storeStatus(store.getStoreStatus())
-                .itemId(item.getId())
-                .storeId(store.getId())
-                .quantity(5)
-                .userId(Long.MAX_VALUE)
-                .build();
+            Store store = createStore("가게", StoreStatus.OPEN);
+            storeRepository.save(store);
 
-        // when then
-        assertThatThrownBy(() -> orderService.createOrder(request, registeredDateTime))
-                .isInstanceOf(NoSuchElementException.class)
-                .hasMessage("해당 사용자가 존재하지 않습니다");
-    }
+            CreateOrderRequest request = CreateOrderRequest.builder()
+                    .storeStatus(store.getStoreStatus())
+                    .itemId(item.getId())
+                    .storeId(store.getId())
+                    .quantity(5)
+                    .userId(Long.MAX_VALUE)
+                    .build();
 
-    @DisplayName("존재하지 않는 가게의 상품을 주문할 경우 예외가 발생한다")
-    @Test
-    void createOrderException_StoreNotExist() {
-        // given
-        LocalDateTime registeredDateTime = LocalDateTime.now();
+            // when then
+            assertThatThrownBy(() -> orderService.createOrder(request, registeredDateTime))
+                    .isInstanceOf(NoSuchElementException.class)
+                    .hasMessage("해당 사용자가 존재하지 않습니다");
+        }
 
-        Item item = createItem(10, 3000);
-        itemRepository.save(item);
+        @DisplayName("존재하지 않는 가게의 상품을 주문할 경우 예외가 발생한다")
+        @Test
+        void createOrderException_StoreNotExist() {
+            // given
+            LocalDateTime registeredDateTime = LocalDateTime.now();
 
-        User user = createUser("사용자");
-        userRepository.save(user);
+            Item item = createItem(10, 3000);
+            itemRepository.save(item);
 
-        CreateOrderRequest request = CreateOrderRequest.builder()
-                .storeStatus(StoreStatus.OPEN)
-                .itemId(item.getId())
-                .storeId(Long.MAX_VALUE)
-                .quantity(5)
-                .userId(user.getId())
-                .build();
+            User user = createUser("사용자");
+            userRepository.save(user);
 
-        // when then
-        assertThatThrownBy(() -> orderService.createOrder(request, registeredDateTime))
-                .isInstanceOf(NoSuchElementException.class)
-                .hasMessage("해당 가게가 존재하지 않습니다");
-    }
+            CreateOrderRequest request = CreateOrderRequest.builder()
+                    .storeStatus(StoreStatus.OPEN)
+                    .itemId(item.getId())
+                    .storeId(Long.MAX_VALUE)
+                    .quantity(5)
+                    .userId(user.getId())
+                    .build();
 
-    @DisplayName("존재하지 않는 상품을 주문할 경우 예외가 발생한다")
-    @Test
-    void createOrderException_ItemNotExist() {
-        // given
-        LocalDateTime registeredDateTime = LocalDateTime.now();
+            // when then
+            assertThatThrownBy(() -> orderService.createOrder(request, registeredDateTime))
+                    .isInstanceOf(NoSuchElementException.class)
+                    .hasMessage("해당 가게가 존재하지 않습니다");
+        }
 
-        Store store = createStore("가게", StoreStatus.OPEN);
-        storeRepository.save(store);
+        @DisplayName("존재하지 않는 상품을 주문할 경우 예외가 발생한다")
+        @Test
+        void createOrderException_ItemNotExist() {
+            // given
+            LocalDateTime registeredDateTime = LocalDateTime.now();
 
-        User user = createUser("사용자");
-        userRepository.save(user);
+            Store store = createStore("가게", StoreStatus.OPEN);
+            storeRepository.save(store);
 
-        CreateOrderRequest request = CreateOrderRequest.builder()
-                .storeStatus(store.getStoreStatus())
-                .itemId(Long.MAX_VALUE)
-                .storeId(store.getId())
-                .quantity(5)
-                .userId(user.getId())
-                .build();
+            User user = createUser("사용자");
+            userRepository.save(user);
 
-        // when then
-        assertThatThrownBy(() -> orderService.createOrder(request, registeredDateTime))
-                .isInstanceOf(NoSuchElementException.class)
-                .hasMessage("해당 상품이 존재하지 않습니다");
-    }
+            CreateOrderRequest request = CreateOrderRequest.builder()
+                    .storeStatus(store.getStoreStatus())
+                    .itemId(Long.MAX_VALUE)
+                    .storeId(store.getId())
+                    .quantity(5)
+                    .userId(user.getId())
+                    .build();
 
-    @DisplayName("재고 수량 부족으로 예외 발생시 주문이 저장되지 않는다")
-    @Test
-    void createOrder_rollback() {
-        // given
-        LocalDateTime registeredDateTime = LocalDateTime.now();
+            // when then
+            assertThatThrownBy(() -> orderService.createOrder(request, registeredDateTime))
+                    .isInstanceOf(NoSuchElementException.class)
+                    .hasMessage("해당 상품이 존재하지 않습니다");
+        }
 
-        Item item = createItem(10, 3000);
-        itemRepository.save(item);
+        @DisplayName("재고 수량 부족으로 예외 발생시 주문이 저장되지 않는다")
+        @Test
+        void createOrder_rollback() {
+            // given
+            LocalDateTime registeredDateTime = LocalDateTime.now();
 
-        Store store = createStore("가게", StoreStatus.OPEN);
-        storeRepository.save(store);
+            Item item = createItem(10, 3000);
+            itemRepository.save(item);
 
-        User user = createUser("사용자");
-        userRepository.save(user);
+            Store store = createStore("가게", StoreStatus.OPEN);
+            storeRepository.save(store);
 
-        CreateOrderRequest request = CreateOrderRequest.builder()
-                .userId(user.getId())
-                .storeId(store.getId())
-                .itemId(item.getId())
-                .quantity(11)
-                .storeStatus(store.getStoreStatus())
-                .build();
+            User user = createUser("사용자");
+            userRepository.save(user);
 
-        // when then
-        assertThatThrownBy(() -> orderService.createOrder(request, registeredDateTime))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("상품 재고가 부족합니다");
+            CreateOrderRequest request = CreateOrderRequest.builder()
+                    .userId(user.getId())
+                    .storeId(store.getId())
+                    .itemId(item.getId())
+                    .quantity(11)
+                    .storeStatus(store.getStoreStatus())
+                    .build();
 
-        assertThat(orderRepository.findAll()).isEmpty();
-    }
+            // when then
+            assertThatThrownBy(() -> orderService.createOrder(request, registeredDateTime))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("상품 재고가 부족합니다");
 
-    /**
-     * 동시성 테스트: 필요 시 수동으로 실행하기
-     * @Transactional 주석 처리 후
-     * @TestInstance(TestInstance.Life_cycle.PER_CLASS) 설정 후 실행
-     */
+            assertThat(orderRepository.findAll()).isEmpty();
+        }
+
+        /**
+         * 동시성 테스트: 필요 시 수동으로 실행하기
+         *
+         * @Transactional 주석 처리 후
+         * @TestInstance(TestInstance.Life_cycle.PER_CLASS) 설정 후 실행
+         */
 //    Item item;
 //    Store store;
 //    User user;
@@ -368,4 +381,334 @@ class OrderServiceTest {
 //        Item updatedItem = itemRepository.findAll().get(0);
 //        assertThat(updatedItem.getStock()).isEqualTo(0);
 //    }
+    }
+
+    @Nested
+    @DisplayName("주문 취소")
+    class CancelOrder {
+
+        @Nested
+        @DisplayName("사용자 주문 취소")
+        class UserCancel {
+
+            User user;
+            Store store;
+            Item item;
+            Order order;
+
+            @PersistenceContext
+            EntityManager em;
+
+            @BeforeEach
+            void setUp() {
+                LocalDateTime registeredDateTime = LocalDateTime.now();
+
+                user = createUser("사용자");
+                userRepository.save(user);
+
+                store = createStore("가게", StoreStatus.OPEN);
+                storeRepository.save(store);
+
+                item = createItem(10, 3000);
+                itemRepository.save(item);
+
+                CreateOrderRequest orderRequest = CreateOrderRequest.builder()
+                        .itemId(item.getId())
+                        .storeStatus(store.getStoreStatus())
+                        .storeId(store.getId())
+                        .quantity(5)
+                        .userId(user.getId())
+                        .build();
+
+                CreateOrderResponse orderResponse = orderService.createOrder(orderRequest, registeredDateTime);
+
+                order = orderRepository.findById(orderResponse.getOrderId())
+                        .orElseThrow(() -> new IllegalArgumentException("주문이 존재하지 않습니다"));
+            }
+
+            @DisplayName("사용자는 주문을 취소할 수 있다")
+            @Test
+            void cancelOrderByUser() {
+                // given
+                User findUser = userRepository.findById(user.getId()).orElseThrow();
+                Order findOrder = orderRepository.findById(order.getId()).orElseThrow();
+
+                UserCancelOrderRequest request = UserCancelOrderRequest.builder()
+                        .userId(findUser.getId())
+                        .orderId(findOrder.getId())
+                        .build();
+
+                // when
+                UserCancelOrderResponse cancelResponse = orderService.cancelOrderByUser(request);
+
+                // then
+                assertThat(cancelResponse.getOrderId()).isEqualTo(findOrder.getId());
+                assertThat(findOrder.getOrderStatus()).isEqualTo(OrderStatus.CANCELED);
+
+                Item updatedItem = itemRepository.findById(item.getId()).orElseThrow();
+                assertThat(updatedItem.getStock()).isEqualTo(10);
+            }
+
+            @DisplayName("존재하지 않는 사용자가 주문 취소할 경우 예외가 발생한다")
+            @Test
+            void cancelOrderByUser_notExistUser() {
+                // given
+                Order findOrder = orderRepository.findById(order.getId()).orElseThrow();
+
+                UserCancelOrderRequest cancelRequest = UserCancelOrderRequest.builder()
+                        .userId(Long.MAX_VALUE)
+                        .orderId(findOrder.getId())
+                        .build();
+
+                // when then
+                assertThatThrownBy(() -> orderService.cancelOrderByUser(cancelRequest))
+                        .isInstanceOf(NoSuchElementException.class)
+                        .hasMessage("해당 사용자가 존재하지 않습니다");
+            }
+
+            @DisplayName("존재하지 않는 주문을 취소할 경우 예외가 발생한다")
+            @Test
+            void cancelOrderByUser_notExistOrder() {
+                // given
+                User findUser = userRepository.findById(user.getId()).orElseThrow();
+
+                UserCancelOrderRequest cancelRequest = UserCancelOrderRequest.builder()
+                        .userId(findUser.getId())
+                        .orderId(Long.MAX_VALUE)
+                        .build();
+
+                // when then
+                assertThatThrownBy(() -> orderService.cancelOrderByUser(cancelRequest))
+                        .isInstanceOf(NoSuchElementException.class)
+                        .hasMessage("해당 주문이 존재하지 않습니다");
+            }
+
+            @DisplayName("주문자와 사용자가 일치하지 않을 경우 예외가 발생한다")
+            @Test
+            void cancelOrderByUser_notEqualUser() {
+                // given
+                User nonOrderUser = createUser("주문하지 않은 사람");
+                userRepository.save(nonOrderUser);
+                Order findOrder = orderRepository.findById(order.getId()).orElseThrow();
+
+                UserCancelOrderRequest request = UserCancelOrderRequest.builder()
+                        .userId(nonOrderUser.getId())
+                        .orderId(findOrder.getId())
+                        .build();
+
+                // when then
+                assertThatThrownBy(() -> orderService.cancelOrderByUser(request))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessage("사용자와 주문자가 일치하지 않습니다");
+            }
+
+            @DisplayName("주문 상태가 취소인 주문을 취소할 경우 예외가 발생한다")
+            @Test
+            void cancelOrderByUser_orderStatusCancel() {
+                // given
+                order.updateOrderStatus(OrderStatus.CANCELED);
+
+                em.flush();
+                em.clear();
+
+                User findUser = userRepository.findById(user.getId()).orElseThrow();
+                Order findOrder = orderRepository.findById(order.getId()).orElseThrow();
+
+                UserCancelOrderRequest request = UserCancelOrderRequest.builder()
+                        .userId(findUser.getId())
+                        .orderId(findOrder.getId())
+                        .build();
+
+                // when then
+                assertThatThrownBy(() -> orderService.cancelOrderByUser(request))
+                        .isInstanceOf(IllegalStateException.class)
+                        .hasMessage("이미 취소된 주문입니다");
+            }
+
+            @DisplayName("주문 상태가 판매 완료인 주문을 취소할 경우 예외가 발생한다")
+            @Test
+            void cancelOrderByUser_orderStatusCompleted() {
+                // given
+                order.updateOrderStatus(OrderStatus.COMPLETED);
+
+                em.flush();
+                em.clear();
+
+                User findUser = userRepository.findById(user.getId()).orElseThrow();
+                Order findOrder = orderRepository.findById(order.getId()).orElseThrow();
+
+                UserCancelOrderRequest request = UserCancelOrderRequest.builder()
+                        .userId(findUser.getId())
+                        .orderId(findOrder.getId())
+                        .build();
+
+                // when then
+                assertThatThrownBy(() -> orderService.cancelOrderByUser(request))
+                        .isInstanceOf(IllegalStateException.class)
+                        .hasMessage("이미 판매 완료된 주문입니다");
+            }
+        }
+
+        @Nested
+        @DisplayName("사장님 주문 취소")
+        class OwnerCancel {
+
+            User user;
+            Store store;
+            Item item;
+            Order order;
+
+            @PersistenceContext
+            EntityManager em;
+
+            @BeforeEach
+            void setUp() {
+                LocalDateTime registeredDateTime = LocalDateTime.now();
+
+                user = createUser("사용자");
+                userRepository.save(user);
+
+                store = createStore("가게", StoreStatus.OPEN);
+                storeRepository.save(store);
+
+                item = createItem(10, 3000);
+                itemRepository.save(item);
+
+                CreateOrderRequest orderRequest = CreateOrderRequest.builder()
+                        .itemId(item.getId())
+                        .storeStatus(store.getStoreStatus())
+                        .storeId(store.getId())
+                        .quantity(5)
+                        .userId(user.getId())
+                        .build();
+
+                CreateOrderResponse orderResponse = orderService.createOrder(orderRequest, registeredDateTime);
+
+                order = orderRepository.findById(orderResponse.getOrderId())
+                        .orElseThrow(() -> new IllegalArgumentException("주문이 존재하지 않습니다"));
+            }
+
+            @DisplayName("사장님은 주문을 취소할 수 있다")
+            @Test
+            void cancelOrderByOwner() {
+                // given
+                Store findStore = storeRepository.findById(store.getId()).orElseThrow();
+                Order findOrder = orderRepository.findById(order.getId()).orElseThrow();
+
+                OwnerCancelOrderRequest request = OwnerCancelOrderRequest.builder()
+                        .storeId(findStore.getId())
+                        .orderId(findOrder.getId())
+                        .build();
+
+                // when
+                OwnerCancelOrderResponse cancelResponse = orderService.cancelOrderByOwner(request);
+
+                // then
+                assertThat(cancelResponse.getOrderId()).isEqualTo(findOrder.getId());
+                assertThat(findOrder.getOrderStatus()).isEqualTo(OrderStatus.CANCELED);
+
+                Item updatedItem = itemRepository.findById(item.getId()).orElseThrow();
+                assertThat(updatedItem.getStock()).isEqualTo(10);
+            }
+
+            @DisplayName("존재하지 않는 가게가 주문 취소할 경우 예외가 발생한다")
+            @Test
+            void cancelOrderByOwner_notExistStore() {
+                // given
+                Order findOrder = orderRepository.findById(order.getId()).orElseThrow();
+
+                OwnerCancelOrderRequest request = OwnerCancelOrderRequest.builder()
+                        .storeId(Long.MAX_VALUE)
+                        .orderId(findOrder.getId())
+                        .build();
+
+                // when then
+                assertThatThrownBy(() -> orderService.cancelOrderByOwner(request))
+                        .isInstanceOf(NoSuchElementException.class)
+                        .hasMessage("해당 가게가 존재하지 않습니다");
+            }
+
+            @DisplayName("존재하지 않는 주문을 취소할 경우 예외가 발생한다")
+            @Test
+            void cancelOrderByOwner_notExistOrder() {
+                // given
+                Store findStore = storeRepository.findById(store.getId()).orElseThrow();
+
+                OwnerCancelOrderRequest request = OwnerCancelOrderRequest.builder()
+                        .storeId(findStore.getId())
+                        .orderId(Long.MAX_VALUE)
+                        .build();
+
+                // when then
+                assertThatThrownBy(() -> orderService.cancelOrderByOwner(request))
+                        .isInstanceOf(NoSuchElementException.class)
+                        .hasMessage("해당 주문이 존재하지 않습니다");
+            }
+
+            @DisplayName("주문 취소 요청 가게와 실제 주문의 가게가 일치하지 않을 경우 예외가 발생한다")
+            @Test
+            void cancelOrderByOwner_notEqualStore() {
+                // given
+                Store nonOrderedStore = createStore("주문되지 않은 가게", StoreStatus.OPEN);
+                storeRepository.save(nonOrderedStore);
+                Order findOrder = orderRepository.findById(order.getId()).orElseThrow();
+
+                OwnerCancelOrderRequest request = OwnerCancelOrderRequest.builder()
+                        .storeId(nonOrderedStore.getId())
+                        .orderId(findOrder.getId())
+                        .build();
+
+                // when then
+                assertThatThrownBy(() -> orderService.cancelOrderByOwner(request))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessage("가게 정보가 일치하지 않습니다");
+            }
+
+            @DisplayName("주문 상태가 취소인 주문을 취소할 경우 예외가 발생한다")
+            @Test
+            void cancelOrderByOwner_orderStatusCancel() {
+                // given
+                order.updateOrderStatus(OrderStatus.CANCELED);
+                em.flush();
+                em.clear();
+
+                Store findStore = storeRepository.findById(store.getId()).orElseThrow();
+                Order findOrder = orderRepository.findById(order.getId()).orElseThrow();
+
+                OwnerCancelOrderRequest request = OwnerCancelOrderRequest.builder()
+                        .storeId(findStore.getId())
+                        .orderId(findOrder.getId())
+                        .build();
+
+                // when then
+                assertThatThrownBy(() -> orderService.cancelOrderByOwner(request))
+                        .isInstanceOf(IllegalStateException.class)
+                        .hasMessage("이미 취소된 주문입니다");
+            }
+
+            @DisplayName("주문 상태가 판매 완료인 주문을 취소할 경우 예외가 발생한다")
+            @Test
+            void cancelOrderByOwner_orderStatusCompleted() {
+                // given
+                order.updateOrderStatus(OrderStatus.COMPLETED);
+                em.flush();
+                em.clear();
+
+                Store findStore = storeRepository.findById(store.getId()).orElseThrow();
+                Order findOrder = orderRepository.findById(order.getId()).orElseThrow();
+
+                OwnerCancelOrderRequest request = OwnerCancelOrderRequest.builder()
+                        .storeId(findStore.getId())
+                        .orderId(findOrder.getId())
+                        .build();
+
+                // when then
+                assertThatThrownBy(() -> orderService.cancelOrderByOwner(request))
+                        .isInstanceOf(IllegalStateException.class)
+                        .hasMessage("이미 판매 완료된 주문입니다");
+            }
+        }
+
+    }
+
 }
