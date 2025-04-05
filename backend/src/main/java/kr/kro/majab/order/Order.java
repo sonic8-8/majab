@@ -41,8 +41,8 @@ public class Order extends BaseEntity {
     @JoinColumn(name = "stores_id")
     private Store store;
 
-    @OneToMany(mappedBy = "order")
-    private List<Review> reviews = new ArrayList<>();
+    @OneToOne(fetch = FetchType.LAZY)
+    private Review review;
 
     @OneToMany(mappedBy = "order")
     private List<OrderItem> orderItems = new ArrayList<>();
@@ -62,9 +62,16 @@ public class Order extends BaseEntity {
         store.getOrders().add(this);
     }
 
-    public void addReview(Review review) {
-        reviews.add(review);
-        review.changeOrder(this);
+    public void changeReview(Review review) {
+        if (this.review != null) {
+            this.review.changeOrder(null);
+        }
+
+        this.review = review;
+
+        if (review != null & review.getOrder() != this) {
+            review.changeOrder(this);
+        }
     }
 
     public void addOrderItem(OrderItem orderItem) {

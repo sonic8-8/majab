@@ -54,7 +54,6 @@ public class Review extends BaseEntity {
 
     public void changeOrder(Order order) {
         this.order = order;
-        order.getReviews().add(this);
     }
 
     public void changeOwnerReview(OwnerReview ownerReview) {
