@@ -2,6 +2,7 @@ package kr.kro.majab.item.request;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -9,9 +10,16 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class UpdateItemStockRequest {
 
+    @NotNull(message = "상품 id는 필수입니다")
     private Long itemId;
 
-    @NotEmpty(message = "재고 수량 입력은 필수입니다")
+    /**
+     * todo: MVP 이후 JWT에서 ownerId 가져와 검증하도록 변경 필요
+     */
+    @NotNull(message = "사장님 id는 필수입니다")
+    private Long ownerId;
+
+    @Min(value = 0, message = "재고 수량은 0개 이상이어야 합니다")
     private int stock;
 
     public UpdateItemStockRequest(Long itemId, int stock) {
